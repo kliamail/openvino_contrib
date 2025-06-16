@@ -24,17 +24,17 @@ public final class NativeLibrary {
         }
     }
 
-    private static String getLibraryName(String name, String linux_ver) {
+    private static String getLibraryName(String name) {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) {
+            if ("tbb".equals(name)) {
+                name += "12";
+            }
             return name + ".dll";
         } else if (osName.contains("mac")) {
             return "lib" + name + ".dylib";
         } else {
             name = "lib" + name + ".so";
-            if (linux_ver != null) {
-                name += "." + linux_ver;
-            }
         }
         return name;
     }
@@ -86,14 +86,7 @@ public final class NativeLibrary {
 
             // Load native libraries.
             for (String lib : nativeLibs) {
-                // On Linux, tbb library has .so.12 and tbbmalloc library has .so.2 soname
-                String version = null;
-                if (lib.equals("tbb")) {
-                    version = "12";
-                } else if (lib.equals("tbbmalloc")) {
-                    version = "2";
-                }
-                lib = getLibraryName(lib, version);
+                lib = getLibraryName(lib);
                 File nativeLibTmpFile = new File(tmpDir, lib);
                 try {
                     System.load(nativeLibTmpFile.getAbsolutePath());

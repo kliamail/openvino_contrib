@@ -11,13 +11,15 @@ println 'CPU architecture: ' + arch
 
 
 def nativesCPP;
-def openvinoVersion = "2024.2"
+def openvinoVersion = "2025.1"
 
 def native_resources = []
 def tbb_dir = System.getenv('TBB_DIR')
 if (tbb_dir) {
     if (new File(tbb_dir + "/../lib/").exists()) {
         native_resources.add(tbb_dir + "/../lib/");
+    } else if (new File(tbb_dir + "/../../../bin").exists()) {
+        native_resources.add(tbb_dir + "/../../../bin");
     } else {
         native_resources.add(tbb_dir + "/../../");
     }
