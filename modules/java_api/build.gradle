@@ -10,7 +10,7 @@ def ov_arch = arch;
 println 'CPU architecture: ' + arch
 
 
-def nativesCPP;
+def nativesCPP = ''
 def openvinoVersion = "2025.1"
 
 def native_resources = []
@@ -49,30 +49,37 @@ if (OperatingSystem.current().isMacOsX()) {
     logger.warn('Unknown operating system!')
 }
 nativesCPP += arch;
+nativesCPP = nativesCPP.toLowerCase()
 
 project.version = "${openvinoVersion}-${nativesCPP}"
 
-def resources_list = ""
-native_resources.each {
-    def tree = fileTree(it) {
-        include '*'
-    }
-    tree.visit { FileVisitDetails details ->
-        if (!details.file.isDirectory()) {
-            resources_list += details.file.name + "\n"
+def platformSpecificLibs = layout.buildDirectory.dir("platform-specific-libs")
+tasks.register('copyNativeLibs', Copy) {
+    into platformSpecificLibs
+
+    def resources_list = ""
+    native_resources.each { resourceDir ->
+        from(resourceDir) {
+            eachFile { file ->
+                file.relativePath = new RelativePath(true, nativesCPP, (String) file.name)
+                resources_list += file.name + "\n"
+            }
         }
     }
+    doLast {
+        def resourcesListFile = new File(platformSpecificLibs.get().dir(nativesCPP).asFile, "resources_list.txt")
+        resourcesListFile.text = "${resources_list}"
+    }
 }
-file('src/main/native').mkdirs()
-file('src/main/native/resources_list.txt').text = "${resources_list}"
+processResources.dependsOn('copyNativeLibs')
+
 sourceSets {
     main {
         java {
             srcDirs = ["src/main/java"]
         }
         resources {
-            srcDirs = native_resources
-            srcDir 'src/main/native'
+            srcDir platformSpecificLibs
         }
     }
     test {

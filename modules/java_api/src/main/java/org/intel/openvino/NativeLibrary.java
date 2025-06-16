@@ -24,19 +24,30 @@ public final class NativeLibrary {
         }
     }
 
+    private static String getNativesFolder() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("win")) {
+            return "windows-x86_64";
+        }
+
+        if (osName.contains("mac")) {
+            return "macos-arm64";
+        }
+
+        return "linux-x86_64";
+    }
+
     private static String getLibraryName(String name) {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) {
-            if ("tbb".equals(name)) {
-                name += "12";
-            }
-            return name + ".dll";
-        } else if (osName.contains("mac")) {
-            return "lib" + name + ".dylib";
-        } else {
-            name = "lib" + name + ".so";
+            return ("tbb".equals(name) ? name + "12" : name) + ".dll";
         }
-        return name;
+
+        if (osName.contains("mac")) {
+            return "lib" + name + ".dylib";
+        }
+
+        return "lib" + name + ".so";
     }
 
     /**
@@ -50,9 +61,10 @@ public final class NativeLibrary {
 
         InputStream resources_list = null;
         try {
+            String nativesFolder = getNativesFolder();
             // Get a list of all native resources (libraries, plugins and other files).
             resources_list =
-                    NativeLibrary.class.getClassLoader().getResourceAsStream("resources_list.txt");
+                    NativeLibrary.class.getClassLoader().getResourceAsStream(nativesFolder + "/resources_list.txt");
             BufferedReader r = new BufferedReader(new InputStreamReader(resources_list));
 
             // Create a temporal folder to unpack native files.
@@ -72,7 +84,7 @@ public final class NativeLibrary {
                     throw new IOException("Invalid file path: " + file);
                 }
 
-                URL url = NativeLibrary.class.getClassLoader().getResource(file);
+                URL url = NativeLibrary.class.getClassLoader().getResource(nativesFolder + "/" + file);
                 if (url == null) {
                     logger.warning("Resource not found: " + file);
                     continue;
