@@ -6,8 +6,6 @@ package org.intel.openvino;
 /** This is a class of infer request that can be run in asynchronous or synchronous manners. */
 public class InferRequest extends Wrapper {
 
-    private boolean isReleased = false;
-
     protected InferRequest(long addr) {
         super(addr);
     }
@@ -87,16 +85,6 @@ public class InferRequest extends Wrapper {
      */
     public void set_tensor(String tensorName, Tensor tensor) {
         SetTensor(nativeObj, tensorName, tensor.nativeObj);
-    }
-
-    /**
-     * Delete the native object to release resources.
-     *
-     * <p>This method is protected from double deallocation
-     */
-    public void release() {
-        delete(nativeObj);
-        isReleased = true;
     }
 
     /*----------------------------------- native methods -----------------------------------*/

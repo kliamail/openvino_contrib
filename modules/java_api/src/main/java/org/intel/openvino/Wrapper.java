@@ -15,6 +15,20 @@ public class Wrapper {
 
     protected final long nativeObj;
 
+    protected volatile boolean isReleased;
+
+    /**
+     * Delete the native object to release resources.
+     *
+     * <p>This method is protected from double deallocation
+     */
+    public void release() {
+        if (!isReleased) {
+            delete(nativeObj);
+            isReleased = true;
+        }
+    }
+
     protected Wrapper(long addr) {
         nativeObj = addr;
     }
@@ -25,7 +39,7 @@ public class Wrapper {
 
     @Override
     protected void finalize() throws Throwable {
-        delete(nativeObj);
+        release();
         super.finalize();
     }
 
